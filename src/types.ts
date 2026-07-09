@@ -200,6 +200,7 @@ export interface PassPlay {
   penalties?: PenaltyEvent[];
   tackledBy?: string[];        // playerIds
   assistedTackle?: string[];
+  defendedBy?: string[];       // playerIds credited with a pass breakup (PBU)
   forcedOutOfBounds?: boolean;
   description?: string;
 }

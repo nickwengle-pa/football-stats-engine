@@ -118,6 +118,14 @@ export class DefensiveCalculator {
       }
     }
 
+    // --- PASSES DEFENDED (explicitly attributed breakups) ---
+    if (p.defendedBy) {
+      for (const defender of p.defendedBy) {
+        const stat = this.getOrCreate(defender);
+        stat.passesDefended++;
+      }
+    }
+
     // --- COVERAGE STATS ---
     if (this.config.trackAdvancedMetrics && p.target) {
       // If we can attribute coverage to a specific defender, that logic

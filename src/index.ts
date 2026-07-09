@@ -135,6 +135,7 @@ export {
   type PenaltyDefinition,
 } from "./calculators/penalty-catalog";
 export {
+  isPlayNullifiedByPenalty,
   type EnforcementResult,
 } from "./calculators/penalty";
 

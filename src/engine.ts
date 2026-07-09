@@ -110,6 +110,20 @@ export class FootballStatsEngine {
     if (this.gameStateEnabled) this.gameState.recordCoinToss(winner, choice);
   }
 
+  /** Configure opening and second-half kickoff receivers directly */
+  configureKickoffReceivers(
+    openingKickoffReceiver: string,
+    secondHalfKickoffReceiver?: string,
+    coinTossWinner?: string,
+    coinTossChoice?: CoinTossChoice,
+  ): void {
+    if (this.gameStateEnabled) {
+      this.gameState.configureKickoffReceivers(
+        openingKickoffReceiver, secondHalfKickoffReceiver, coinTossWinner, coinTossChoice,
+      );
+    }
+  }
+
   /** Record the overtime coin toss */
   recordOvertimeCoinToss(winner: string, choice: CoinTossChoice): void {
     if (this.gameStateEnabled) this.gameState.recordOvertimeCoinToss(winner, choice);

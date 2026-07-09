@@ -9,6 +9,7 @@ import {
   initRushingStats, isRushPlay, isPassPlay, isRedZone, isThirdDown,
   isFirstDown, directionBucket, safeDivide,
 } from "../utils";
+import { isPlayNullifiedByPenalty } from "./penalty";
 
 export class RushingCalculator {
   private stats: Map<string, RushingStats> = new Map();
@@ -19,6 +20,8 @@ export class RushingCalculator {
   ) {}
 
   process(play: Play): void {
+    // Play wiped out by an accepted penalty: nothing counts.
+    if (isPlayNullifiedByPenalty(play)) return;
     // Standard rush plays
     if (isRushPlay(play)) {
       const p = play as RushPlay & { context: Play["context"] };

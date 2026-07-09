@@ -13,6 +13,7 @@ import {
   isRedZone, isThirdDown, isFourthDown, isFirstDown, isGoalToGo,
   safeDivide, clockToSeconds, secondsToClock, round,
 } from "../utils";
+import { isPlayNullifiedByPenalty } from "./penalty";
 
 interface DriveAccumulator {
   driveNumber: number;
@@ -76,6 +77,13 @@ export class TeamCalculator {
           penTeamStat.penaltyYards += pen.yards;
         }
       }
+      return;
+    }
+
+    // Play wiped out by an accepted penalty: no attempt/yardage credit,
+    // but the penalty itself still counts against the flagged team.
+    if (isPlayNullifiedByPenalty(play)) {
+      this.processPenaltiesOnPlay(play);
       return;
     }
 

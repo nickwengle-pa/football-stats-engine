@@ -9,6 +9,7 @@ import {
   initPassingStats, isPassPlay, isRedZone, isThirdDown, isFirstDown,
   calculatePasserRating, calculateAdjustedYPA, safeDivide, round,
 } from "../utils";
+import { isPlayNullifiedByPenalty } from "./penalty";
 
 export class PassingCalculator {
   private stats: Map<string, PassingStats> = new Map();
@@ -21,6 +22,8 @@ export class PassingCalculator {
 
   process(play: Play): void {
     if (!isPassPlay(play)) return;
+    // Play wiped out by an accepted penalty: nothing counts.
+    if (isPlayNullifiedByPenalty(play)) return;
     const p = play as PassPlay & { context: Play["context"] };
     const passerId = p.passer;
     if (!passerId) return;

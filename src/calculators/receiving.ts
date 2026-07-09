@@ -9,6 +9,7 @@ import {
   initReceivingStats, isPassPlay, isRedZone, isThirdDown,
   isFirstDown, safeDivide, round,
 } from "../utils";
+import { isPlayNullifiedByPenalty } from "./penalty";
 
 export class ReceivingCalculator {
   private stats: Map<string, ReceivingStats> = new Map();
@@ -21,6 +22,8 @@ export class ReceivingCalculator {
 
   process(play: Play): void {
     if (!isPassPlay(play)) return;
+    // Play wiped out by an accepted penalty: nothing counts.
+    if (isPlayNullifiedByPenalty(play)) return;
     const p = play as PassPlay & { context: Play["context"] };
 
     // Skip sacks, scrambles, throw-aways, spikes (no receiver involved)

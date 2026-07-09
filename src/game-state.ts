@@ -287,6 +287,7 @@ export enum CoinTossChoice {
   Receive = "receive",
   Kick = "kick",
   Defer = "defer",
+  DefendGoal = "defend_goal",
 }
 
 export enum PossessionReason {
@@ -466,6 +467,8 @@ export class GameStateManager {
   private coinTossWinner: string = "";
   private coinTossChoice: CoinTossChoice = CoinTossChoice.Defer;
   private deferredTeam: string = "";
+  private openingKickoffReceiver: string = "";
+  private secondHalfKickoffReceiver: string = "";
 
   constructor(level: RuleLevel = "nfl", customRules?: Partial<RuleSet>) {
     this.rules = { ...getRuleSet(level), ...customRules };
@@ -492,6 +495,30 @@ export class GameStateManager {
     this.awayTeam = away;
   }
 
+  /** Configure opening and second-half kickoff receivers directly. */
+  configureKickoffReceivers(
+    openingKickoffReceiver: string,
+    secondHalfKickoffReceiver?: string,
+    coinTossWinner?: string,
+    coinTossChoice?: CoinTossChoice,
+  ): void {
+    this.openingKickoffReceiver = openingKickoffReceiver;
+    this.secondHalfKickoffReceiver = secondHalfKickoffReceiver
+      ?? (openingKickoffReceiver === this.homeTeam.id ? this.awayTeam.id : this.homeTeam.id);
+    if (coinTossWinner) {
+      this.coinTossWinner = coinTossWinner;
+    }
+    if (coinTossChoice) {
+      this.coinTossChoice = coinTossChoice;
+    }
+    this.phase = GamePhase.Kickoff;
+    this.possession = openingKickoffReceiver;
+    this.addEvent(GameEventType.CoinToss, coinTossWinner,
+      coinTossWinner && coinTossChoice
+        ? `${coinTossWinner} wins coin toss and elects to ${coinTossChoice}`
+        : `${openingKickoffReceiver} receives opening kickoff`);
+  }
+
   recordCoinToss(winner: string, choice: CoinTossChoice): void {
     if (choice === CoinTossChoice.Defer && !this.rules.allowDeferOnCoinToss) {
       choice = CoinTossChoice.Receive;
@@ -503,18 +530,22 @@ export class GameStateManager {
 
     const loser = winner === this.homeTeam.id ? this.awayTeam.id : this.homeTeam.id;
 
+    let openingKickoffReceiver = loser;
     if (choice === CoinTossChoice.Receive) {
-      this.possession = winner;
+      openingKickoffReceiver = winner;
     } else if (choice === CoinTossChoice.Kick) {
-      this.possession = loser;
-    } else if (choice === CoinTossChoice.Defer) {
+      openingKickoffReceiver = loser;
+    } else if (choice === CoinTossChoice.Defer || choice === CoinTossChoice.DefendGoal) {
       this.deferredTeam = winner;
-      this.possession = loser;
+      openingKickoffReceiver = loser;
     }
 
-    this.addEvent(GameEventType.CoinToss, undefined,
-      `${winner} wins coin toss and elects to ${choice}`);
-    this.phase = GamePhase.Kickoff;
+    this.configureKickoffReceivers(
+      openingKickoffReceiver,
+      winner === openingKickoffReceiver ? loser : winner,
+      winner,
+      choice,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -856,7 +887,11 @@ export class GameStateManager {
           this.awayChallenges = this.createChallengeState();
         }
         this.gameClockSeconds = this.rules.quarterLengthSeconds;
-        if (this.deferredTeam) {
+        if (this.secondHalfKickoffReceiver) {
+          this.possession = this.secondHalfKickoffReceiver;
+          this.addEvent(GameEventType.StartOfHalf, this.secondHalfKickoffReceiver,
+            `${this.secondHalfKickoffReceiver} receives 2nd half kickoff`);
+        } else if (this.deferredTeam) {
           this.possession = this.deferredTeam;
           this.addEvent(GameEventType.StartOfHalf, this.deferredTeam,
             `${this.deferredTeam} receives 2nd half kickoff`);
